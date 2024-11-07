@@ -20,7 +20,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv()
 
 include(
-    "components/database.py"
+    "components/database.py",
+    "components/apps.py",
 )
 
 # Quick-start development settings - unsuitable for production
@@ -34,17 +35,6 @@ DEBUG = os.environ.get('DEBUG', False) == 'True'
 
 ALLOWED_HOSTS = ['127.0.0.1']
 
-
-# Application definition
-
-INSTALLED_APPS = [
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
-]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

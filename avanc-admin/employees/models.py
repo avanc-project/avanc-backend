@@ -1,0 +1,99 @@
+import uuid
+from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils.translation import gettext_lazy as _
+
+
+class TimeStampedMixin(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class UUIDMixin(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    class Meta:
+        abstract = True
+
+
+class Employer(TimeStampedMixin, UUIDMixin):
+    name = models.CharField(_('name'), max_length=255)
+    address = models.TextField(_('address'), blank=True)
+    contact_email = models.EmailField(_('contact email'), blank=True)
+    contact_phone = models.CharField(
+        _('contact phone'), max_length=15, blank=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        db_table = "fintech\".\"employer"
+        verbose_name = _('Employer')
+        verbose_name_plural = _('Employers')
+
+
+class Employee(TimeStampedMixin, UUIDMixin):
+    employer = models.ForeignKey(
+        Employer, on_delete=models.CASCADE, related_name='employees')
+    full_name = models.CharField(_('full name'), max_length=255)
+    email = models.EmailField(_('email'))
+    phone = models.CharField(_('phone'), max_length=15, blank=True)
+    salary = models.DecimalField(
+        _('salary'), max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+
+    def __str__(self):
+        return self.full_name
+
+    class Meta:
+        db_table = "fintech\".\"employee"
+        verbose_name = _('Employee')
+        verbose_name_plural = _('Employees')
+
+
+class SalaryAdvanceRequest(TimeStampedMixin, UUIDMixin):
+    PENDING = 'pending'
+    APPROVED = 'approved'
+    REJECTED = 'rejected'
+
+    STATUS_CHOICES = [
+        (PENDING, _('Pending')),
+        (APPROVED, _('Approved')),
+        (REJECTED, _('Rejected')),
+    ]
+
+    employee = models.ForeignKey(
+        Employee, on_delete=models.CASCADE, related_name='advance_requests')
+    amount_requested = models.DecimalField(
+        _('amount requested'), max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    status = models.CharField(
+        _('status'), max_length=20, choices=STATUS_CHOICES, default=PENDING)
+    request_date = models.DateTimeField(_('request date'), auto_now_add=True)
+    review_date = models.DateTimeField(_('review date'), null=True, blank=True)
+
+    def __str__(self):
+        return f"Request {self.id} by {self.employee.full_name}"
+
+    class Meta:
+        db_table = "fintech\".\"salary_advance_request"
+        verbose_name = _('Salary Advance Request')
+        verbose_name_plural = _('Salary Advance Requests')
+
+
+class Transaction(UUIDMixin):
+    request = models.ForeignKey(
+        SalaryAdvanceRequest, on_delete=models.CASCADE, related_name='transactions')
+    transaction_date = models.DateTimeField(
+        _('transaction date'), auto_now_add=True)
+    amount = models.DecimalField(
+        _('amount'), max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+
+    def __str__(self):
+        return f"Transaction for {self.request}"
+
+    class Meta:
+        db_table = "fintech\".\"transaction"
+        verbose_name = _('Transaction')
+        verbose_name_plural = _('Transactions')
