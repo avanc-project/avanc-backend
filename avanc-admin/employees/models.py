@@ -69,7 +69,7 @@ class SalaryAdvanceRequest(TimeStampedMixin, UUIDMixin):
     amount_requested = models.DecimalField(
         _('amount requested'), max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     status = models.CharField(
-        _('status'), max_length=20, choices=STATUS_CHOICES, default=PENDING)
+        _('status'), max_length=20, choices=STATUS_CHOICES, default=PENDING, auto_created=True)
     request_date = models.DateTimeField(_('request date'), auto_now_add=True)
     review_date = models.DateTimeField(_('review date'), null=True, blank=True)
 

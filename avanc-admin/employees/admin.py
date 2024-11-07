@@ -16,9 +16,9 @@ class EmployeeAdmin(admin.ModelAdmin):
 
 @admin.register(SalaryAdvanceRequest)
 class EmployeeAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("employee", "amount_requested",
+                    "status", "request_date", "review_date")
 
+    list_filter = ("status", "request_date")
 
-@admin.register(Transaction)
-class EmployeeAdmin(admin.ModelAdmin):
-    pass
+    search_fields = ("employee", "status",)
