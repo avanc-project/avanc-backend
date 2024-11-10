@@ -4,24 +4,8 @@ networks:
   avanc_network:
     driver: bridge
 
+
 services:
-  database:
-    image: postgres:16
-    container_name: postgres_avanc
-    environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_NAME}
-
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    env_file:
-      - .env
-    
-    networks:
-      - avanc_network
-    
-
   service:
     build: avanc-admin
     env_file:
@@ -32,22 +16,24 @@ services:
       - static_volume:/opt/app/static
     networks:
       - avanc_network
-    expose:
-      - 8000
 
-  nginx:
-    image: nginx:latest
+  database:
+    image: postgres:16
+
+    container_name: postgres_avanc
+    restart: on-failure
+    env_file:
+      - .env
+
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./configs:/etc/nginx/conf.d:ro
-      - ./data:/data/:ro
-      - static_volume:/opt/app/static
+      - postgres_data:/var/lib/postgresql/data
+
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     networks:
       - avanc_network
-    depends_on:
-      - service
-    ports:
-      - 80:80
 
 volumes:
   postgres_data:

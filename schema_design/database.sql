@@ -1,3 +1,1 @@
--- SCHEMA: fintech
 CREATE SCHEMA IF NOT EXISTS fintech;
-

@@ -13,6 +13,11 @@ class Migration(migrations.Migration):
     dependencies = []
 
     operations = [
+        migrations.RunSQL(
+            sql="""
+                       CREATE SCHEMA IF NOT EXISTS fintech;
+                       """
+        ),
         migrations.CreateModel(
             name="Employee",
             fields=[
@@ -34,14 +39,16 @@ class Migration(migrations.Migration):
                 ("email", models.EmailField(max_length=254, verbose_name="email")),
                 (
                     "phone",
-                    models.CharField(blank=True, max_length=15, verbose_name="phone"),
+                    models.CharField(blank=True, max_length=15,
+                                     verbose_name="phone"),
                 ),
                 (
                     "salary",
                     models.DecimalField(
                         decimal_places=2,
                         max_digits=10,
-                        validators=[django.core.validators.MinValueValidator(0)],
+                        validators=[
+                            django.core.validators.MinValueValidator(0)],
                         verbose_name="salary",
                     ),
                 ),
@@ -106,7 +113,8 @@ class Migration(migrations.Migration):
                     models.DecimalField(
                         decimal_places=2,
                         max_digits=10,
-                        validators=[django.core.validators.MinValueValidator(0)],
+                        validators=[
+                            django.core.validators.MinValueValidator(0)],
                         verbose_name="amount requested",
                     ),
                 ),
@@ -173,7 +181,8 @@ class Migration(migrations.Migration):
                     models.DecimalField(
                         decimal_places=2,
                         max_digits=10,
-                        validators=[django.core.validators.MinValueValidator(0)],
+                        validators=[
+                            django.core.validators.MinValueValidator(0)],
                         verbose_name="amount",
                     ),
                 ),

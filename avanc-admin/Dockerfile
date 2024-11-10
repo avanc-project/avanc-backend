@@ -1,27 +1,17 @@
 FROM python:3.9
 
-WORKDIR /opt/app
+WORKDIR /
 
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-ENV UWSGI_PROCESSES 1
-ENV UWSGI_THREADS 16
-ENV UWSGI_HARAKIRI 240
+# Заведите необходимые переменные окружения
 ENV DJANGO_SETTINGS_MODULE 'config.settings'
-
-COPY run_uwsgi.sh run_uwsgi.sh
-COPY requirements.txt requirements.txt
-COPY uwsgi/uwsgi.ini uwsgi.ini
-
-RUN  mkdir -p /var/www/static/ \
-  && mkdir -p /var/www/media/ \
-  && mkdir -p /opt/app/static/ \
-  && mkdir -p /opt/app/media/ \
-  && pip install --upgrade pip \
-  && pip install -r requirements.txt
 
 COPY . .
 
-RUN chmod +x run_uwsgi.sh
 
-ENTRYPOINT ["./run_uwsgi.sh"]
+# Установите зависимости
+RUN  pip install --upgrade pip \
+  && pip install --no-cache-dir -r requirements.txt
+
+EXPOSE 8000
+
+CMD python manage.py collectstatic --noinput && python manage.py migrate && python manage.py shell -c "from django.contrib.auth.models import User; User.objects.create_superuser('admin', 'admin@example.com', 'admin')" && gunicorn --bind 0.0.0.0:8000 config.wsgi
