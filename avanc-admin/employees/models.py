@@ -44,6 +44,9 @@ class Employee(TimeStampedMixin, UUIDMixin):
     salary = models.DecimalField(
         _('salary'), max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
 
+    def get_all_transactions(self):
+        return Transaction.objects.filter(request__employee=self)
+
     def __str__(self):
         return self.full_name
 
