@@ -7,6 +7,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views import View
 import json
+from django.contrib.auth.hashers import make_password, check_password
+from django.middleware.csrf import get_token
 
 from employees.models import Employee, SalaryAdvanceRequest, Transaction
 
@@ -166,5 +168,49 @@ class EmployeeSalaryAdvanceRequestApi(View):
             return JsonResponse({"id": salary_request.id}, status=201)
         except Employee.DoesNotExist:
             return JsonResponse({"error": "Employee not found"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+
+
+class SignUpApi(View):
+    http_method_names = ['post']
+
+    @method_decorator(csrf_exempt)
+    def post(self, request, *args, **kwargs):
+        try:
+            data = json.loads(request.body)
+            email = data.get('email')
+            password = data.get('password')
+            full_name = data.get('full_name')
+            if not email or not password or not full_name:
+                return JsonResponse({"error": "Invalid data"}, status=400)
+            hashed_password = make_password(password)
+            employee = Employee.objects.create(
+                email=email, password=hashed_password, full_name=full_name)
+            return JsonResponse({"id": employee.id, "email": employee.email}, status=201)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+
+
+class SignInApi(View):
+    http_method_names = ['post']
+
+    @method_decorator(csrf_exempt)
+    def post(self, request, *args, **kwargs):
+        try:
+            data = json.loads(request.body)
+            email = data.get('email')
+            password = data.get('password')
+            if not email or not password:
+                return JsonResponse({"error": "Invalid data"}, status=400)
+            try:
+                employee = Employee.objects.get(email=email)
+                if check_password(password, employee.password):
+                    token = get_token(request)
+                    return JsonResponse({"token": token}, status=200)
+                else:
+                    return JsonResponse({"error": "Invalid credentials"}, status=401)
+            except Employee.DoesNotExist:
+                return JsonResponse({"error": "Invalid credentials"}, status=401)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)

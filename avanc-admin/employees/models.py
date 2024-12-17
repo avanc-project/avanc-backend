@@ -43,6 +43,7 @@ class Employee(TimeStampedMixin, UUIDMixin):
     phone = models.CharField(_('phone'), max_length=15, blank=True)
     salary = models.DecimalField(
         _('salary'), max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    password = models.CharField(_('password'), max_length=128)
 
     def get_all_transactions(self):
         return Transaction.objects.filter(request__employee=self)
