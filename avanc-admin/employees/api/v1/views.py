@@ -10,7 +10,7 @@ import json
 from django.contrib.auth.hashers import make_password, check_password
 from django.middleware.csrf import get_token
 
-from employees.models import Employee, SalaryAdvanceRequest, Transaction
+from employees.models import Employee, SalaryAdvanceRequest, Transaction, Employer
 
 
 class EmployeeListApi(View):
@@ -182,12 +182,17 @@ class SignUpApi(View):
             email = data.get('email')
             password = data.get('password')
             full_name = data.get('full_name')
-            if not email or not password or not full_name:
+            salary = data.get('salary')
+            employer_name = data.get('employer_name')
+            if not email or not password or not full_name or salary is None or not employer_name:
                 return JsonResponse({"error": "Invalid data"}, status=400)
             hashed_password = make_password(password)
+            employer = Employer.objects.get(name=employer_name)
             employee = Employee.objects.create(
-                email=email, password=hashed_password, full_name=full_name)
+                email=email, password=hashed_password, full_name=full_name, salary=salary, employer=employer)
             return JsonResponse({"id": employee.id, "email": employee.email}, status=201)
+        except Employer.DoesNotExist:
+            return JsonResponse({"error": "Employer not found"}, status=404)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
 
@@ -205,6 +210,10 @@ class SignInApi(View):
                 return JsonResponse({"error": "Invalid data"}, status=400)
             try:
                 employee = Employee.objects.get(email=email)
+                print(password == employee.password)
+                print(password)
+                print(employee.password)
+
                 if check_password(password, employee.password):
                     token = get_token(request)
                     return JsonResponse({"token": token}, status=200)

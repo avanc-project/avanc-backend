@@ -58,14 +58,14 @@ class Employee(TimeStampedMixin, UUIDMixin):
 
 
 class SalaryAdvanceRequest(TimeStampedMixin, UUIDMixin):
-    PENDING = 'pending'
-    APPROVED = 'approved'
-    REJECTED = 'rejected'
+    PENDING = 'pendiente'
+    APPROVED = 'aprobado'
+    REJECTED = 'rechazado'
 
     STATUS_CHOICES = [
-        (PENDING, _('Pending')),
-        (APPROVED, _('Approved')),
-        (REJECTED, _('Rejected')),
+        (PENDING, _('Pendiente')),
+        (APPROVED, _('Aprobado')),
+        (REJECTED, _('Rechazado')),
     ]
 
     employee = models.ForeignKey(

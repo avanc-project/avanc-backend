@@ -6,6 +6,6 @@ python3 manage.py collectstatic --noinput
 
 set -e
 
-chown www-data:www-data /var/log
+chown -R www-data:www-data /opt/app/static /opt/app/media
 
 uwsgi --strict --ini uwsgi.ini
