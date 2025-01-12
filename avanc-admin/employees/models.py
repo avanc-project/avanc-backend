@@ -2,6 +2,7 @@ import uuid
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 
 class TimeStampedMixin(models.Model):
@@ -74,7 +75,7 @@ class SalaryAdvanceRequest(TimeStampedMixin, UUIDMixin):
         _('amount requested'), max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     status = models.CharField(
         _('status'), max_length=20, choices=STATUS_CHOICES, default=PENDING, auto_created=True)
-    request_date = models.DateTimeField(_('request date'), auto_now_add=True)
+    request_date = models.DateTimeField(_('request date'), default=timezone.now)
     review_date = models.DateTimeField(_('review date'), null=True, blank=True)
 
     def __str__(self):
