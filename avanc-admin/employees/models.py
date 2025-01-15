@@ -37,6 +37,28 @@ class Employer(TimeStampedMixin, UUIDMixin):
 
 
 class Employee(TimeStampedMixin, UUIDMixin):
+    BANCO_UNION = 'Banco Unión S.A.'
+    BANCO_MERCANTIL = 'Banco Mercantil Santa Cruz S.A.'
+    BANCO_NACIONAL = 'Banco Nacional de Bolivia S.A. (BNB)'
+    BANCO_BISA = 'Banco BISA S.A.'
+    BANCO_CREDITO = 'Banco de Crédito de Bolivia S.A. (BCP)'
+    BANCO_GANADERO = 'Banco Ganadero S.A.'
+    BANCO_ECONOMICO = 'Banco Económico S.A.'
+    BANCO_SOL = 'BancoSol S.A.'
+    BANCO_FIE = 'Banco FIE S.A.'
+
+    BANK_CHOICES = [
+        (BANCO_UNION, _('Banco Unión S.A.')),
+        (BANCO_MERCANTIL, _('Banco Mercantil Santa Cruz S.A.')),
+        (BANCO_NACIONAL, _('Banco Nacional de Bolivia S.A. (BNB)')),
+        (BANCO_BISA, _('Banco BISA S.A.')),
+        (BANCO_CREDITO, _('Banco de Crédito de Bolivia S.A. (BCP)')),
+        (BANCO_GANADERO, _('Banco Ganadero S.A.')),
+        (BANCO_ECONOMICO, _('Banco Económico S.A.')),
+        (BANCO_SOL, _('BancoSol S.A.')),
+        (BANCO_FIE, _('Banco FIE S.A.')),
+    ]
+
     employer = models.ForeignKey(
         Employer, on_delete=models.CASCADE, related_name='employees')
     full_name = models.CharField(_('full name'), max_length=255)
@@ -46,9 +68,14 @@ class Employee(TimeStampedMixin, UUIDMixin):
         _('salary'), max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
 
     bank_account = models.CharField(_('bank account'), max_length=20)
-    bank_name = models.CharField(_('bank name'), max_length=100)
+    bank_name = models.CharField(
+        _('bank name'), 
+        max_length=100,
+        choices=BANK_CHOICES,
+        default=BANCO_UNION
+    )    
+    
     city = models.CharField(_('city'), max_length=100)
-
     password = models.CharField(_('password'), max_length=128)
 
     @property
