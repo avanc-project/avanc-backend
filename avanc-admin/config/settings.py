@@ -24,6 +24,7 @@ include(
     "components/apps.py",
 )
 
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
@@ -35,6 +36,13 @@ DEBUG = os.environ.get('DEBUG', False) == 'True'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '127.0.0.1').split(',')
 
+CSRF_TRUSTED_ORIGINS = ['http://localhost:5001']
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:5001',
+]
+
+CORS_ALLOW_CREDENTIALS = True
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",

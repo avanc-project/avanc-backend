@@ -3,7 +3,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
-
+from decimal import Decimal
 
 class TimeStampedMixin(models.Model):
     created = models.DateTimeField(auto_now_add=True)
@@ -44,7 +44,23 @@ class Employee(TimeStampedMixin, UUIDMixin):
     phone = models.CharField(_('phone'), max_length=15, blank=True)
     salary = models.DecimalField(
         _('salary'), max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+
+    bank_account = models.CharField(_('bank account'), max_length=20)
+    bank_name = models.CharField(_('bank name'), max_length=100)
+    city = models.CharField(_('city'), max_length=100)
+
     password = models.CharField(_('password'), max_length=128)
+
+    @property
+    def available_amount(self):
+        return self.salary * Decimal('0.70')
+
+    def update_available_amount(self, amount_to_subtract):
+        if self.available_amount >= amount_to_subtract:
+            self.salary = self.salary - amount_to_subtract
+            self.save()
+        else:
+            raise ValueError("Requested amount exceeds available amount")
 
     def get_all_transactions(self):
         return Transaction.objects.filter(request__employee=self)
@@ -80,6 +96,14 @@ class SalaryAdvanceRequest(TimeStampedMixin, UUIDMixin):
 
     def __str__(self):
         return f"Request {self.id} by {self.employee.full_name}"
+
+    def save(self, *args, **kwargs):
+        if self.status == self.APPROVED and not self.review_date:
+            self.review_date = timezone.now()
+            if hasattr(self, 'employee'):
+                self.employee.update_available_amount(self.amount_requested)
+        
+        super().save(*args, **kwargs)
 
     class Meta:
         db_table = "fintech\".\"salary_advance_request"

@@ -6,7 +6,7 @@ from .models import Employee, Employer, SalaryAdvanceRequest, Transaction
 
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
-    list_display = ("full_name", "employer", "salary", "email", "phone")
+    list_display = ("full_name", "employer", "salary", "available_amount", "email", "phone")
 
     list_filter = ("employer",)
     search_fields = ("full_name", "employer")
