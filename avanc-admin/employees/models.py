@@ -4,6 +4,8 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from decimal import Decimal
+from django.db.models import Sum
+from django.core.exceptions import ValidationError
 
 class TimeStampedMixin(models.Model):
     created = models.DateTimeField(auto_now_add=True)
@@ -67,7 +69,7 @@ class Employee(TimeStampedMixin, UUIDMixin):
     salary = models.DecimalField(
         _('salary'), max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
 
-    bank_account = models.CharField(_('bank account'), max_length=20)
+    bank_account = models.CharField(_('bank account'), max_length=20, default="1234567")
     bank_name = models.CharField(
         _('bank name'), 
         max_length=100,
@@ -75,19 +77,26 @@ class Employee(TimeStampedMixin, UUIDMixin):
         default=BANCO_UNION
     )    
     
-    city = models.CharField(_('city'), max_length=100)
+    city = models.CharField(_('city'), max_length=100, default="Santa Cruz de la Sierra")
     password = models.CharField(_('password'), max_length=128)
+
+    def get_current_month_advances(self):
+        current_date = timezone.now()
+        return SalaryAdvanceRequest.objects.filter(
+            employee=self,
+            status=SalaryAdvanceRequest.APPROVED,
+            review_date__year=current_date.year,
+            review_date__month=current_date.month
+        ).aggregate(total=Sum('amount_requested'))['total'] or 0
 
     @property
     def available_amount(self):
-        return self.salary * Decimal('0.70')
+        return (self.salary * Decimal('0.70')) - self.get_current_month_advances()
 
     def update_available_amount(self, amount_to_subtract):
         if self.available_amount >= amount_to_subtract:
-            self.salary = self.salary - amount_to_subtract
-            self.save()
-        else:
-            raise ValueError("Requested amount exceeds available amount")
+            return True
+        raise ValueError("Requested amount exceeds available amount")
 
     def get_all_transactions(self):
         return Transaction.objects.filter(request__employee=self)
@@ -124,11 +133,25 @@ class SalaryAdvanceRequest(TimeStampedMixin, UUIDMixin):
     def __str__(self):
         return f"Request {self.id} by {self.employee.full_name}"
 
+    def clean(self):
+        if self.amount_requested and self.employee:
+            if self.amount_requested > self.employee.available_amount:
+                raise ValidationError({
+                    'amount_requested': _(
+                        'Amount requested (%(requested)s) exceeds available amount (%(available)s)'
+                    ) % {
+                        'requested': self.amount_requested,
+                        'available': self.employee.available_amount,
+                    }
+                })
+
     def save(self, *args, **kwargs):
         if self.status == self.APPROVED and not self.review_date:
             self.review_date = timezone.now()
             if hasattr(self, 'employee'):
                 self.employee.update_available_amount(self.amount_requested)
+        elif self.status == self.REJECTED:
+            self.review_date = timezone.now()
         
         super().save(*args, **kwargs)
 

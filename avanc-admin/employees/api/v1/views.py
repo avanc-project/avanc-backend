@@ -61,7 +61,8 @@ class EmployeeDetailApi(View):
                 "id": employee.id,
                 "full_name": employee.full_name,
                 "salary": employee.salary,
-                # ...other fields...
+                "available_amount" : employee.available_amount,
+                "get_current_month_advances" : employee.get_current_month_advances,
             }
             return JsonResponse(data)
         except Employee.DoesNotExist:
@@ -161,11 +162,23 @@ class EmployeeSalaryAdvanceRequestApi(View):
             employee = Employee.objects.get(pk=employee_id)
             data = json.loads(request.body)
             amount_requested = data.get('amount_requested')
+            
             if not amount_requested:
                 return JsonResponse({"error": "Invalid data"}, status=400)
+
+            if amount_requested > employee.available_amount:
+                return JsonResponse({
+                    "error": f'Amount requested ({amount_requested}) exceeds available amount ({employee.available_amount})'
+                }, status=400)
+
             salary_request = SalaryAdvanceRequest.objects.create(
                 employee=employee, amount_requested=amount_requested)
+            
+            salary_request.clean()
+            salary_request.save()
+            
             return JsonResponse({"id": salary_request.id}, status=201)
+
         except Employee.DoesNotExist:
             return JsonResponse({"error": "Employee not found"}, status=404)
         except Exception as e:
